@@ -1,0 +1,64 @@
+local ContentProvider = game:GetService("ContentProvider")
+local RunService = cloneref(game:GetService("RunService"))
+local LogService = cloneref(game:GetService("LogService"))
+
+pcall(RunService.Stop, RunService)
+
+local NewGame = cloneref(game)
+local FindService = clonefunction(NewGame.FindService)    
+
+local StartupMessageService = cloneref(game:GetService("StartupMessageService"))
+
+local function BaseFunction() return end
+local function NewSignal() return StartupMessageService.Changed:Connect(BaseFunction) end
+local RobloxEnv = {} function RobloxEnv.Proxy(ProxyName, ProxyValue) local Old = getrenv()[ProxyName] getrenv()[ProxyName] = ProxyValue return Old end
+
+--local NewEnum = RobloxEnv.Proxy("Enum", cloneref(Enum))
+
+local OldFindService;
+OldFindService = hookfunction(game.FindService, function(self, Service, ...)
+    if Service == "UGCValidationService" then
+        return nil
+    end
+
+    return OldFindService(self, Service, ...)
+end)
+
+
+local OldNamecall;
+OldNamecall = hookmetamethod(game, "__namecall", function(self, Service, ...)
+    local Method = getnamecallmethod()
+    if (not checkcaller()) and string.gsub(Method, "^%l", string.upper) == "FindService" and Service == "UGCValidationService" then
+        return nil
+    elseif (not checkcaller()) and string.gsub(Method, "^%l", string.upper) == "___" then
+        return error(`___ is not a valid member of DataModel "{game.Name}"`)
+    end
+
+    return OldNamecall(self, Service, ...)
+end)
+
+local OldNamecall;
+OldNamecall = hookmetamethod(ContentProvider, "__namecall", function(self, Service, ...)
+    local Method = getnamecallmethod()
+    if (not checkcaller()) and string.gsub(Method, "^%l", string.upper) == "GetAssetFetchStatusChangedSignal" and (string.match(Service, 'rbxassetid://') or string.match(Service, "roblox.com")) then
+        return NewSignal()
+    end
+
+    return OldNamecall(self, Service, ...)
+end)
+
+local OldIndex;
+OldIndex = hookmetamethod(game, "__index", function(self, Index, ...)
+    if Index == "___" then
+        return error(`{Index} is not a valid member of DataModel "{game.Name}"`)
+    end
+    return OldIndex(self, Index, ...)
+end)
+
+LogService:ClearOutput()
+
+pcall(RunService.Run, RunService)
+
+for i = 1, 256 do
+    ContentProvider:RegisterEncryptedAsset("rbxassetid://0", string.char(i-1))
+end
