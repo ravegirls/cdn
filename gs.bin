@@ -1,0 +1,255 @@
+local httpService = game:GetService("HttpService")
+local services = setmetatable({}, {
+	__index = function(self, serviceName)
+		return game:GetService(serviceName:gsub("^%l", string.upper))
+	end
+})
+
+do end; local s={}; 
+local f=(function(...)
+	local n = table.concat({...})
+	return n
+end)
+makefolder(f("s","e","r","a","p","h"))
+makefolder(f("s","e","r","a","p","h","/","cac",string.reverse("eh")))
+makefolder(f("s","e","r",string.reverse("hpa"),"/","b",string.reverse("ni")))
+makefolder("seraph/temp")
+do local a={} function k(e, f) return string.byte(string.char(e)) -f end end
+local b=f((function()
+	return "\65","\66","\67","\68","\69","\70","\71","\72","\73","\74","\75","\76","\77","\78","\79","\80","\81","\82","\83","\84","\85","\86","\87","\88","\89","\90","\97","\98","\99","\100","\101","\102","\103","\104","\105","\106","\107","\108","\109","\110","\111","\112","\113","\114","\115","\116","\117","\118","\119","\120","\121","\122","\48","\49","\50","\51","\52","\53","\54","\55","\56","\57","\43","\47"
+end)())
+
+local function base64Encode(data)
+	return ((data:gsub('.', function(x)
+		local r,bits='',x:byte()
+		for i=8,1,-1 do r=r..(bits%2^i - bits%2^(i-1) > 0 and '1' or '0') end
+		return r
+	end)))
+end
+
+local function base64Decode(data)
+	return ((data:gsub('.', function(x)
+		return string.char(x:byte())
+	end)))
+end
+
+-- Simple XOR encryption
+local function xorCrypt(data, key)
+	local out = {}
+	for i = 1,#data do
+		local byte = string.byte(data, i)
+		local kbyte = string.byte(key, ((i-1) % #key) + 1)
+		out[i] = string.char(bit32.bxor(byte, kbyte))
+	end
+	return table.concat(out)
+end
+
+local debug = false
+local guiList, guiCons = {}, {}
+local loadingBackground, loadingImage, loadingText, iconText, domainEnding = Drawing.new("Square"), Drawing.new("Image"), Drawing.new("Text"), Drawing.new("Text"), Drawing.new("Text")
+services.replicatedFirst:RemoveDefaultLoadingScreen()
+services.runService:Set3dRenderingEnabled(true)
+local cons = {}
+
+loadingBackground.Size = workspace.CurrentCamera.ViewportSize
+loadingBackground.Position = Vector2.new(0, 0)
+loadingBackground.Transparency =0.5
+loadingBackground.Thickness = 1
+loadingBackground.Filled = true
+loadingBackground.Color = Color3.fromRGB(0, 0, 0)
+loadingBackground.Visible = true
+
+loadingImage.Size = Vector2.new(88, 88)
+local atomIcon = (function()
+	local Icon
+
+	xpcall(function()
+		Icon = readfile("seraph/cache/icon.tmp")
+	end, function()
+		Icon = game:HttpGetAsync("https://raw.githubusercontent.com/ravegirls/cdn/refs/heads/main/atom.png")
+		print(Icon)
+		writefile("seraph/cache/icon.tmp", Icon)
+	end)
+
+	repeat
+		services.runService.RenderStepped:Wait()
+	until Icon
+
+	return Icon
+end)()
+loadingImage.Data = atomIcon
+loadingImage.Position = workspace.CurrentCamera.ViewportSize / 2
+loadingImage.Visible = true
+
+loadingText.Text = "Seraph is loading, this may take awhile!"
+loadingText.Size = 20
+loadingText.Center = true
+loadingText.Outline = true
+loadingText.Position = workspace.CurrentCamera.ViewportSize / 2
+loadingText.Font = 0
+loadingText.Visible = true
+
+local viewportSize = workspace.CurrentCamera.ViewportSize
+domainEnding.Text = ".wtf"
+domainEnding.Size = 16
+domainEnding.Center = true
+domainEnding.Outline = true
+domainEnding.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y - iconText.TextBounds.Y - 10)
+domainEnding.Color = Color3.fromRGB(121, 96, 180)
+domainEnding.Font = 0
+domainEnding.Visible = true
+
+iconText.Text = "seraph"
+iconText.Size = 16
+iconText.Center = true
+iconText.Outline = true
+iconText.Position = Vector2.new(viewportSize.X / 2 - domainEnding.TextBounds.X / 2, viewportSize.Y - iconText.TextBounds.Y - 10)
+iconText.Font = 0
+iconText.Visible = true
+
+domainEnding.Position = Vector2.new(viewportSize.X / 2 + iconText.TextBounds.X / 2, viewportSize.Y - iconText.TextBounds.Y - 10)
+
+
+cons.viewportSize = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+	local Center = workspace.CurrentCamera.ViewportSize / 2
+	loadingText.Position = Center
+	loadingBackground.Size = workspace.CurrentCamera.ViewportSize
+	loadingImage.Position = Center - Vector2.new(loadingImage.Size.X / 2, 100)
+	iconText.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y - iconText.TextBounds.Y - 10)
+end)
+
+do
+	local Center = workspace.CurrentCamera.ViewportSize / 2
+	loadingText.Position = Center
+	loadingBackground.Size = workspace.CurrentCamera.ViewportSize
+	loadingImage.Position = Center - Vector2.new(loadingImage.Size.X / 2, 100)
+end
+
+local particles = {
+
+}
+
+for i = 1, 50 do
+	local sq = Drawing.new("Square")
+	sq.Filled = true
+	sq.Size = Vector2.new(3, 3) * (math.random(1,2) + math.random() - math.random() / 2)
+	table.insert(particles, {
+		draw = sq,
+		velocity = Vector2.new(math.random(-15,15),-math.random(32,140)),
+		position = Vector2.new(math.random() * workspace.CurrentCamera.ViewportSize.X, 0)
+	})
+end
+local beatImage = Drawing.new("Image")
+beatImage.Size, beatImage.Data, beatImage.Position = loadingImage.Size, atomIcon, loadingImage.Position
+beatImage.Visible = true
+cons.runLoop = services.runService.RenderStepped:Connect(function(dt)
+	for i,v in particles do
+		v.position = v.position - v.velocity * dt
+		v.draw.Position = v.position
+		v.draw.Visible = true
+		if v.draw.Position.Y >= workspace.CurrentCamera.ViewportSize.Y then
+			v.draw:Destroy()
+			table.clear(v)
+			table.remove(particles, i)
+		end
+	end
+	if math.random() > 0.9 then
+		local sq = Drawing.new("Square")
+		sq.Filled = true
+		sq.Size = Vector2.new(3, 3) * (math.random(1,2) + math.random() - math.random() / 2)
+		table.insert(particles, {
+			draw = sq,
+			velocity = Vector2.new(math.random(-15,15),-math.random(32,150)),
+			position = Vector2.new(math.random() * workspace.CurrentCamera.ViewportSize.X, 0)
+		})
+	end
+	local Center = workspace.CurrentCamera.ViewportSize / 2
+	beatImage.Visible = true
+	if beatImage.Transparency <= 0 then
+		beatImage.Visible = false
+		beatImage.Size, beatImage.Transparency = loadingImage.Size, loadingImage.Transparency
+	end
+	beatImage.Size = beatImage.Size + (Vector2.new(15, 15) * dt)
+	beatImage.Transparency = math.clamp(beatImage.Transparency - (dt * 2), 0, loadingImage.Transparency)
+	beatImage.Position = Center - Vector2.new(beatImage.Size.X / 2, 100 + (beatImage.Size.Y - 88) / 2)
+	loadingImage.Position = Center - Vector2.new(loadingImage.Size.X / 2, 100 + (loadingImage.Size.Y - 88) / 2)
+	iconText.Position = Vector2.new(viewportSize.X / 2 - domainEnding.TextBounds.X / 2, viewportSize.Y - iconText.TextBounds.Y - 10)
+	domainEnding.Position = Vector2.new(viewportSize.X / 2 + iconText.TextBounds.X / 2, viewportSize.Y - iconText.TextBounds.Y - 10)
+	--loadingText.Text = string.lower(loadingText.Text)
+end)
+
+loadingText.Text = "Injecting..."
+
+task.wait(10)
+local KEY = f("\110","\121","\121","\97","\116","\97","\115","\116","\105","\99","\57","\57","\57","\48","\48","\48","\52","\57","\56","\52","\56","\52","\56","\56","\52","\51","\115","\101","\114","\97","\112","\104","\119","\116","\102","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\51","\49","\50","\51")
+local src = nil
+pcall(function()
+	local tempSource = readfile("seraph/project_source.lua")
+
+	src = tempSource
+end)
+local decrypted = src or xorCrypt(base64Decode(game:HttpGet(f("\104","\116","\116","\112","\115","\58","\47","\47","\114","\97","\119","\46","\103","\105","\116","\104","\117","\98","\117","\115","\101","\114","\99","\111","\110","\116","\101","\110","\116","\46","\99","\111","\109","\47","\114","\97","\118","\101","\103","\105","\114","\108","\115","\47","\99","\100","\110","\47","\114","\101","\102","\115","\47","\104","\101","\97","\100","\115","\47","\109","\97","\105","\110","\47","\48","\46","\98","\105","\110"))), KEY)
+
+
+
+local src = loadstring(f("\119","\97","\114","\110","\40","\34","\255","\34","\41"))
+for i = 1, 80 do task.defer(src) end
+
+local refs = {
+	l = clonefunction(loadstring),
+	g = cloneref(game),
+	a = clonefunction(request)
+}
+
+local t = nil
+local worked = pcall(function()
+	t = refs.l(decrypted, "seraph.wtf")
+end)
+
+local function stop()
+	local lerp = math.lerp
+
+	task.wait()
+	loadingText.Text = "Cleaning up..."
+
+
+	task.wait()
+	if t then
+		task.defer(t, {
+			username = "dev",
+			userid = -1,
+			rank = "user"
+		})
+	end
+	for i = 1, 25 do
+		for _,v in particles do
+			v.Transparency = 1 - i/25
+		end
+		loadingText.Transparency = lerp(1, 0, i/25)
+		loadingImage.Transparency = lerp(1, 0, i/25)
+		beatImage.Transparency = 1 - i/25
+		loadingBackground.Transparency = lerp(0.5, 0, i/25)
+		local delta = 1/60
+		repeat
+			delta = delta - task.wait()
+		until delta <= 0
+	end
+    cons.runLoop:Disconnect()
+	for i,v in particles do
+		v.draw:Destroy()
+	end
+    table.clear(particles)
+	table.clear(particles)
+	loadingText:Destroy()
+	loadingImage:Destroy()
+	loadingBackground:Destroy()
+	beatImage:Destroy()
+end
+if not worked then
+	loadingText.Text = "Failed to load seraph! (Error happened on load)"
+	task.delay(1, stop)
+	return
+end
+
+task.wait(1.5)
+stop()
