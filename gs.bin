@@ -44,6 +44,20 @@ local function xorCrypt(data, key)
 	return table.concat(out)
 end
 
+
+local function xpcall(...)
+	local check = { ... }
+	for _, f in check do
+		local succ, reason = pcall(f)
+		if succ then
+			break
+		end
+
+		print(reason)
+	end
+	return true
+end
+
 local debug = false
 local guiList, guiCons = {}, {}
 local loadingBackground, loadingImage, loadingText, iconText, domainEnding = Drawing.new("Square"), Drawing.new("Image"), Drawing.new("Text"), Drawing.new("Text"), Drawing.new("Text")
